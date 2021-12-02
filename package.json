@@ -8,5 +8,12 @@
     "dev": "nodemon index.js"
   },
   "keywords": [],
-  "author": "Denisse Nova"
+  "author": "Denisse Nova",
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  },
+  "dependencies": {
+    "axios": "^0.24.0",
+    "dayjs": "^1.10.7"
+  }
 }
