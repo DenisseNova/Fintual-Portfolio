@@ -4,6 +4,9 @@ const defaultStocks = [
   { companyName: 'Amazon.com Inc', symbolCode: 'AMZN' }
 ]
 
+const DATE_FORMAT = 'YYYY-MM-DD'
+
 module.exports = {
-  defaultStocks
+  defaultStocks,
+  DATE_FORMAT
 }
