@@ -41,6 +41,17 @@ class Stocks {
       return messageResult
     }
   }
+  async getData(symbols) {
+    const response = await axios.get(`${this._urlApi}/datatables/WIKI/PRICES?api_key=${this._accessKey}&ticker=${symbols || this._symbolCode}`).catch(e => e.response);
+
+    if (response?.status >= 200 && response?.status < 300) {
+      //console.log(response.data.data)
+      return response.data.datatable.data || [];
+    }
+    console.log('No fue posible cargar datos de la API')
+    return [];
+  
+  }
 }
 
 module.exports = Stocks
