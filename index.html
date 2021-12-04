@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>cartera</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+</head>
+
+<body>
+  <div class="container has-text-centered">
+    <div class="columns is-mobile is-multiline is-centered">
+      <div class="column is-12">
+        <table id="portfolio" class="table mx-auto">
+          <thead>
+            <tr>
+              <th>Simbolo</th>
+              <th>Fecha Compra</th>
+              <th>Precio</th>
+              <th>Cantidad</th>
+              <th>WI</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="column is-12">
+        <div class="field is-horizontal mt-5">
+          <div class="field-label is-normal">
+            <label class="label">Desde</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+                <input class="input is-primary " type="date" placeholder="Primary input" id="desde">
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="field is-horizontal mt-2">
+          <div class="field-label is-normal">
+            <label class="label">Hasta</label>
+          </div>
+          <div class="field-body">
+            <div class="field">
+              <p class="control">
+                <input class="input is-primary " type="date" placeholder="Primary input" id="hasta">
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="buttons p-5 is-centered">
+          <button class="button is-primary is-size-5" type="button" id="btnBuscar">Buscar</button>
+        </div>
+    
+        <div id="tables-data" class="columns is-multiline is-mobile"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.24.0/axios.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.7/dayjs.min.js"></script>
+  <script>
+    window.onload = () => {
+
+      loadData();
+
+      document.getElementById('btnBuscar').addEventListener('click', async () => {
+        let desde = document.getElementById('desde').value;
+        let hasta = document.getElementById('hasta').value
+        if (!desde || !hasta) return;
+
+        try {
+          document.getElementById('btnBuscar').disabled = true
+          document.getElementById('btnBuscar').innerHTML = 'Cargando'
+            const response = await axios.get(`/profit?dateFrom=${desde}&dateTo=${hasta}`);
+            document.getElementById('btnBuscar').disabled = false;
+            document.getElementById('btnBuscar').innerHTML = 'Buscar'
+
+            printData(response.data)
+        } catch (error) {
+          document.getElementById('btnBuscar').disabled = false;
+          document.getElementById('btnBuscar').innerHTML = 'Buscar'
+          console.error(error);
+        }
+      })
+    };
+    function printPercentage(value) {
+      return `${(value * 100).toFixed(4)}%`
+    }
+    function printData(investmentReturns) {
+      let tables = document.getElementById("tables-data")
+        tables.innerHTML = `
+            ${Object.keys(investmentReturns)
+              .map(
+                (el) =>
+                  `
+                  <div class="column is-12-mobile is-6-tablet is-4-desktop">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th colspan="2">${el}</th>
+                        </tr>
+                        <tr>
+                          <th>Información</th>
+                          <th>Valor</th>
+                        </tr>
+                      </thead>
+                      <tbody id="cuerpo">
+                        <tr>
+                          <td>Retorno esperado diario</td>
+                          <td>${printPercentage(investmentReturns[el].RetornoEsperadoDiario)}</td>
+                        </tr>
+                        <tr>
+                          <td>Retorno esperado anual</td>
+                          <td>${printPercentage(investmentReturns[el].retornoEsperadoAnual)}</td>
+                        </tr>
+                        <tr>
+                          <td>Varianza diaria</td>
+                          <td>${printPercentage(investmentReturns[el].varianzaDiaria)}</td>
+                        </tr>
+                        <tr>
+                          <td>Varianza anual</td>
+                          <td>${printPercentage(investmentReturns[el].varianzaAnual)}</td>
+                        </tr>
+                        <tr>
+                          <td>Deviación diaria</td>
+                          <td>${printPercentage(investmentReturns[el].desviacionDiaria)}</td>
+                        </tr>
+                        <tr>
+                          <td>Deviación anual</td>
+                          <td>${investmentReturns[el].desviacionAnual.toFixed(5)}</td>
+                        </tr>
+                        <tr>
+                          <td>Desempeño </td>
+                          <td>${investmentReturns[el].performance.toFixed(5)}</td>
+                        </tr>
+                        <tr>
+                          <td>Retorno Portafolio</td>
+                          <td>${printPercentage(investmentReturns[el].retornoPortfolio)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  `
+              )
+              .join("")}
+          `;
+    }
+    
+    async function loadData() {
+      try {
+        const response = await axios.get(`/portfolio`);
+        if (response.status >= 200 && response.status < 300) {
+          document.querySelector('#portfolio tbody').innerHTML = `
+            ${
+              response.data.map((el) => {              
+                return `
+                <tr>
+                  <td>${el.symbolCode}</td>
+                  <td>${dayjs(el.date, 'YYYY-MM-DD').format('DD-MM-YYYY')}</td>
+                  <td>${el.price}</td>
+                  <td>${el.quantity}</td> 
+                  <td>${el.wi}%</td>  
+                </tr>
+                `
+              }).join('')
+            }
+          `
+        } else {
+          alert(`No fue posible cargar los datos del portafolio`)
+        }
+      } catch {
+        alert(`No fue posible cargar los datos del portafolio`)
+      }
+    }
+  </script>
+
+</body>
+
+</html>

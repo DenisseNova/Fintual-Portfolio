@@ -71,13 +71,14 @@ class Portfolio {
     Object.keys(portfolio).forEach((symbolData) => {
       investmentReturns[symbolData] = {
         dailySum: 0,
-        dailyExpectedReturn: 0,
-        annualExpectedReturn: 0,
-        dailyVariance: 0,
-        annualVariance: 0,
-        dailyDeviaton: 0,
-        annualDeviaton: 0,
-        performance: 0
+        RetornoEsperadoDiario : 0,
+        retornoEsperadoAnual: 0,
+        varianciaDiaria: 0,
+        varianciaAnual: 0,
+        desviacionDiaria: 0,
+        desviacionAnual: 0,
+        performance: 0,
+        retornoPortfolio:0
       }
       const dataReturn = portfolio[symbolData].map((el, i) => {
         const nextDayPrice = portfolio[symbolData][i + 1]?.value;
@@ -88,45 +89,49 @@ class Portfolio {
         acc = acc + el;
         return acc;
       }, 0);
-      investmentReturns[symbolData].dailyExpectedReturn =
+      investmentReturns[symbolData].RetornoEsperadoDiario =
         investmentReturns[symbolData].dailySum / dataReturn.length;
-      investmentReturns[symbolData].annualExpectedReturn = this.getAnnualValue(
-        investmentReturns[symbolData].dailyExpectedReturn
+      investmentReturns[symbolData].retornoEsperadoAnual = this.getAnnualValue(
+        investmentReturns[symbolData].RetornoEsperadoDiario
       );
 
-      investmentReturns[symbolData].dailyVariance = this.getVariance(dataReturn);
-      investmentReturns[symbolData].annualVariance = this.getAnnualValue(
-        investmentReturns[symbolData].dailyVariance
+      investmentReturns[symbolData].varianzaDiaria = this.getVariance(dataReturn);
+      investmentReturns[symbolData].varianzaAnual = this.getAnnualValue(
+        investmentReturns[symbolData].varianzaDiaria
       );
 
-      investmentReturns[symbolData].dailyDeviaton = this.getStandardDeviation(
+      investmentReturns[symbolData].desviacionDiaria = this.getStandardDeviation(
         dataReturn
       );
-      investmentReturns[symbolData].annualDeviaton = this.getAnnualValue(
-        investmentReturns[symbolData].dailyDeviaton
+      investmentReturns[symbolData].desviacionAnual = this.getAnnualValue(
+        investmentReturns[symbolData].desviacionDiaria
       );
 
       investmentReturns[symbolData].performance =
-        investmentReturns[symbolData].dailyExpectedReturn /
-        investmentReturns[symbolData].dailyDeviaton;
+        investmentReturns[symbolData].RetornoEsperadoDiario /
+        investmentReturns[symbolData].desviacionDiaria;
+
+      //0.1045%
+
+      const culcularPortfolio = this.getAllWI()
     })
 
 
     return investmentReturns;
   }
   getAnnualValue(value) {
-    return ((value / 100 + 1) ** 360 - 1) * 100;
+    return (((value / 100 ) + 1) ** 360 - 1) * 100;
   }
 
   getVariance(arr = []) {
     if (arr.length < 1) return 0;
     const sum = arr.reduce((acc, val) => acc + val);
-    const median = sum / arr.length;
+    const avg = sum / arr.length;
     let variance = 0;
     arr.forEach((el) => {
-      variance += (el - median) * (el - median);
+      variance += (el - avg) * (el - avg);
     });
-    variance /= arr.length;
+    variance = variance / arr.length;
     return variance;
   };
 
@@ -139,6 +144,24 @@ class Portfolio {
     );
   }
 
+  getCapital() {
+    return this._stocks.reduce((acc, el) => {
+      acc = acc + (el.price * el.quantity);
+      return acc;
+    }, 0);
+  }
+
+  getAllWI() {
+    const capital = this.getCapital();
+    return this._stocks.map((el) => {
+      return {
+        symbolCode: el.stocks.symbolCode,
+        WI: (((el.price * el.quantity) / capital) * 100).toFixed(2)
+      }
+    })
+  }
+
+ 
 }
 
 module.exports = Portfolio

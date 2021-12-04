@@ -13,6 +13,7 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
 
 const myPortfolio = new Portfolio();
 myPortfolio.addBuyStocks('AAPL', '2018-01-05', 100, 2);
+myPortfolio.addBuyStocks('MSFT', '2018-01-05', 200, 3);
 
 const PORT = process.env.PORT || 3000;
 
@@ -31,6 +32,24 @@ app.get('/profit', async (req, res) => {
 
   const data = await myPortfolio.calculate(dateFrom.format(DATE_FORMAT), dateTo.format(DATE_FORMAT))
   return res.json(data)
+})
+
+app.get('/portfolio', async (req, res) => {
+  const dataWI = {};
+  myPortfolio.getAllWI().forEach((el) => {
+    dataWI[el.symbolCode] = el.WI
+  })
+
+  const data = myPortfolio.stocks.map(el => {
+    return {
+      symbolCode: el.stocks.symbolCode,
+      date: el.date,
+      price: el.price,
+      quantity: el.quantity,
+      wi: dataWI[el.stocks.symbolCode]
+    }
+  });
+  return res.json(data);
 })
 
 app.listen(PORT, () => {
